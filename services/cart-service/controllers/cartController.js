@@ -3,6 +3,34 @@ import Product from '../../../models/Product.js';
 import { calculateDiscount } from '../utils/discountCalculator.js';
 
 class CartController {
+  constructor() {
+    // Bind methods to preserve 'this' context
+    this.addToCart = this.addToCart.bind(this);
+    this.getCart = this.getCart.bind(this);
+    this.removeFromCart = this.removeFromCart.bind(this);
+    this.updateQuantity = this.updateQuantity.bind(this);
+    this.clearCart = this.clearCart.bind(this);
+    this.recalculateCart = this.recalculateCart.bind(this);
+  }
+
+  // Helper method to recalculate cart totals
+  async recalculateCart(cart) {
+    await cart.populate('items.productId');
+    
+    // Calculate subtotal
+    cart.subtotal = cart.items.reduce((sum, item) => {
+      return sum + (item.price * item.quantity);
+    }, 0);
+
+    // Calculate discount
+    const discountResult = calculateDiscount(cart.items);
+    cart.discountApplied = discountResult.eligible;
+    cart.discountAmount = discountResult.discountAmount;
+
+    // Calculate total
+    cart.total = cart.subtotal - cart.discountAmount;
+  }
+
   // Add item to cart
   async addToCart(req, res) {
     try {
@@ -40,12 +68,10 @@ class CartController {
           quantity,
           price: product.price
         });
-      }``
+      }
 
-      cart.subtotal = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const discount = calculateDiscount(cart.items);
-      cart.discount = discount.discountAmount;
-      cart.total = cart.subtotal - cart.discount;
+      // Recalculate cart totals
+      await this.recalculateCart(cart);
       await cart.save();
 
       // Populate product details for response
@@ -168,21 +194,7 @@ class CartController {
       item.quantity = quantity;
 
       // Recalculate totals
-      await cart.populate('items.productId');
-      
-      // Calculate subtotal
-      cart.subtotal = cart.items.reduce((sum, item) => {
-        return sum + (item.price * item.quantity);
-      }, 0);
-
-      // Calculate discount
-      const discountResult = calculateDiscount(cart.items);
-      cart.discountApplied = discountResult.eligible;
-      cart.discountAmount = discountResult.discountAmount;
-
-      // Calculate total
-      cart.total = cart.subtotal - cart.discountAmount;
-      
+      await this.recalculateCart(cart);
       await cart.save();
 
       // Populate product details for response
@@ -201,24 +213,6 @@ class CartController {
         error: error.message
       });
     }
-  }
-
-  // Helper method to recalculate cart totals
-  async recalculateCart(cart) {
-    await cart.populate('items.productId');
-    
-    // Calculate subtotal
-    cart.subtotal = cart.items.reduce((sum, item) => {
-      return sum + (item.price * item.quantity);
-    }, 0);
-
-    // Calculate discount
-    const discountResult = calculateDiscount(cart.items);
-    cart.discountApplied = discountResult.eligible;
-    cart.discountAmount = discountResult.discountAmount;
-
-    // Calculate total
-    cart.total = cart.subtotal - cart.discountAmount;
   }
 
   // Clear cart
@@ -243,5 +237,6 @@ class CartController {
   }
 }
 
+// Create and export a single instance
 const cartController = new CartController();
 export default cartController;
