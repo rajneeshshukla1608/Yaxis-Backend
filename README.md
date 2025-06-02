@@ -1,9 +1,28 @@
 
 # Y-Axis Overseas
 
-This is the API Documentation of Y-axis Visa Immigration Platform
+This is the API Documentation of the Y-axis Visa Immigration Platform
 
-# Y-Axis Immigration Backend API Documentation
+# Y-Axis Immigration Backend API Documentation and Setup Guide
+
+## Prerequisites
+- Node.js (v16 or higher)
+- npm (comes with Node.js)
+- Git
+
+## Step 1: Clone the Repository
+```bash
+git clone <repository-url>
+cd Yaxis-Backend
+```
+
+## Step 2: Install Dependencies
+```bash
+npm install
+```
+```bash
+npm start
+```
 
 Base URL: `http://localhost:8000`
 
